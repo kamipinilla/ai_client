@@ -18,11 +18,9 @@ export default function sketch(t: p5): void {
   let isPaused: boolean
 
   t.setup = () => {
-    t.createCanvas(size * 10 + 150, size * 20)
+    t.createCanvas(size * 10 + 200, size * 20)
 
     game = new Game()
-    game.spawnRandomPiece()
-
     isPaused = false
   }
 
@@ -58,9 +56,9 @@ export default function sketch(t: p5): void {
   }
 
   function update() {
-    if (game.isGameOver()) return
+    if (t.frameCount < 90 || game.isGameOver()) return
 
-    if (t.frameCount % 8 === 0) {
+    if (t.frameCount % 4 === 0) {
       if (game.canDrop()) {
         game.drop()
       } else {
@@ -68,7 +66,7 @@ export default function sketch(t: p5): void {
         if (game.hasLinesToBurn()) {
           game.burnLines()
         }
-        game.spawnRandomPiece()
+        game.updateCurrentPiece()
       }
     }
   }
@@ -112,12 +110,27 @@ export default function sketch(t: p5): void {
     }
   }
 
+  function displayNextPiece() {
+    t.strokeWeight(2)
+    t.stroke(0)
+    t.fill(0, 0, 255)
+
+    const nextPiecePositions = game.getNextPiecePositions()
+    const newAnchorX = size * 8
+    const newAnchorY = size * -9
+    for (const position of nextPiecePositions) {
+      const x = position.getX()
+      const y = position.getY()
+      t.square(newAnchorX + size * x, newAnchorY + size * y, size)
+    }
+
+  }
+
   function display() {
     flipVertically()
     displayBackground()
     displayBoard()
-    if (game.hasPiece()) {
-      displayPiece()
-    }
+    displayPiece()
+    displayNextPiece()
   }
 }

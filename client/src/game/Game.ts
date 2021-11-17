@@ -27,30 +27,50 @@ function getRandomPiece(): Piece {
 }
 export default class Game {
   private board: Board
-  private piece: Piece | null
+  private piece: Piece
+  private nextPiece: Piece
+  private gameOver: boolean
 
   constructor() {
     this.board = new Board()
-    this.piece = null
+    
+    this.gameOver = false
+    this.nextPiece = getRandomPiece()
+    this.updateCurrentPiece()
   }
 
   public isGameOver(): boolean {
-    return this.piece !== null && this.board.createsCollition(this.piece.getPositions())
+    return this.gameOver
   }
 
-  public spawnRandomPiece(): void {
-    this.piece = getRandomPiece()
+  public updateCurrentPiece(): void {
+    this.piece = this.nextPiece
+    this.setupNextPiece()
+
+    this.checkIfGameOver()
+  }
+
+  private checkIfGameOver() {
+    if (this.board.createsCollition(this.piece.getPositions())) {
+      this.gameOver = true
+    }
+  }
+
+  private setupNextPiece(): void {
+    let nextPiece = getRandomPiece()
+    if (this.piece.equals(nextPiece)) {
+      nextPiece = getRandomPiece()
+    }
+
+    this.nextPiece = nextPiece
   }
 
   public canDrop(): boolean {
-    if (this.piece === null) throw Error()
-
     return this.board.canDrop(this.piece)
   }
 
   public drop(): void {
     if (this.isGameOver()) throw Error()
-    if (this.piece === null) throw Error()
     if (!this.canDrop()) throw Error()
 
     this.piece.drop()
@@ -58,15 +78,9 @@ export default class Game {
 
   public merge(): void {
     if (this.isGameOver()) throw Error()
-
-    if (this.piece === null) throw Error()
-
-    if (this.board.canDrop(this.piece)) {
-      throw Error()
-    }
+    if (this.board.canDrop(this.piece)) throw Error()
 
     this.board.merge(this.piece)
-    this.piece = null
   }
 
   public hasLinesToBurn(): boolean {
@@ -93,37 +107,27 @@ export default class Game {
     return Board.height
   }
 
-  public hasPiece(): boolean {
-    return this.piece !== null
-  }
-
   public getPiecePositions(): PiecePositions {
-    if (!this.piece) throw Error()
-
     return this.piece.getPositions()
   }
 
-  public shiftPieceLeft(): void {
-    if (this.piece === null) throw Error()
+  public getNextPiecePositions(): PiecePositions {
+    return this.nextPiece.getPositions()
+  }
 
+  public shiftPieceLeft(): void {
     this.piece.shiftLeft()
   }
 
   public shiftPieceRight(): void {
-    if (this.piece === null) throw Error()
-
     this.piece.shiftRight()
   }
 
   public rotatePieceRight(): void {
-    if (this.piece === null) throw Error()
-
     this.piece.rotateRight()
   }
 
   public rotatePieceLeft(): void {
-    if (this.piece === null) throw Error()
-    
     this.piece.rotateLeft()
   }
 }
