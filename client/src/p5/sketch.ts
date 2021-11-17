@@ -18,7 +18,7 @@ export default function sketch(t: p5): void {
   let isPaused: boolean
 
   t.setup = () => {
-    t.createCanvas(size * 10, size * 20)
+    t.createCanvas(size * 10 + 150, size * 20)
 
     game = new Game()
     game.spawnRandomPiece()
@@ -80,6 +80,11 @@ export default function sketch(t: p5): void {
 
   function displayBackground() {
     t.background(0)
+
+    t.fill(0)
+    t.strokeWeight(2)
+    t.stroke(255)
+    t.rect(0, 0, size * 10, size * 20)
   }
 
   function displayBlock(x: number, y: number, isPiece: boolean) {
