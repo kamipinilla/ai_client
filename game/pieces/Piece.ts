@@ -1,11 +1,12 @@
 import Position from '../Position'
-import { NumStates, PiecePositions, State } from './types'
+import { NumStates, PieceName, PiecePositions, State } from './types'
 
 export default abstract class Piece {
   protected anchor: Position
   protected state: State
   
   protected readonly abstract numStates: NumStates
+  protected readonly abstract name: PieceName
   
   constructor(anchor: Position) {
     this.anchor = anchor
@@ -30,6 +31,14 @@ export default abstract class Piece {
 
   public rotateLeft(): void {
     this.state = (this.state - 1) % this.numStates as State
+  }
+
+  public getName(): PieceName {
+    return this.name
+  }
+
+  public equals(other: Piece): boolean {
+    return this.name === other.name
   }
 
   public abstract getPositions(): PiecePositions

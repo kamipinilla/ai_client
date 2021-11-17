@@ -1,9 +1,10 @@
 import Position from '../../Position'
-import { NumStates, PiecePositions } from '../types'
+import { NumStates, PieceName, PiecePositions } from '../types'
 import Piece from '../Piece'
 
 export default class ZPiece extends Piece {
   protected readonly numStates: NumStates
+  protected readonly name: PieceName = 'Z'
 
   constructor(anchor: Position) {
     super(anchor)
