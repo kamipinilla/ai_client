@@ -4,11 +4,12 @@ import Piece from '../Piece'
 
 export default class ZPiece extends Piece {
   protected readonly numStates: NumStates
-  protected readonly name: PieceName = 'Z'
+  protected readonly name: PieceName
 
   constructor(anchor: Position) {
     super(anchor)
 
+    this.name = 'Z'
     this.numStates = 2
   }
 
@@ -42,7 +43,7 @@ export default class ZPiece extends Piece {
   private getPosition1(): PiecePositions {
     const positions = this.getCopiedAnchor()
 
-    positions[0].decreaseX()
+    positions[0].decreaseY()
 
     positions[1].increaseX()
 

@@ -1,6 +1,10 @@
 import Position from '../Position'
 import { NumStates, PieceName, PiecePositions, State } from './types'
 
+function modulo(n: number, m: number): number {
+  return ((n % m) + m) % m
+}
+
 export default abstract class Piece {
   protected anchor: Position
   protected state: State
@@ -26,11 +30,11 @@ export default abstract class Piece {
   }
 
   public rotateRight(): void {
-    this.state = (this.state + 1) % this.numStates as State
+    this.state = modulo(this.state + 1, this.numStates) as State
   }
 
   public rotateLeft(): void {
-    this.state = (this.state - 1) % this.numStates as State
+    this.state = modulo(this.state - 1, this.numStates) as State
   }
 
   public getName(): PieceName {

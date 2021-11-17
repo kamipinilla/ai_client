@@ -2,13 +2,13 @@ import Position from '../../Position'
 import Piece from '../Piece'
 import { NumStates, PieceName, PiecePositions } from '../types'
 
-export default class LPiece extends Piece {
+export default class JPiece extends Piece {
   protected readonly numStates: NumStates
-  protected readonly name: PieceName = 'L'
+  protected readonly name: PieceName
 
   constructor(anchor: Position) {
     super(anchor)
-
+    this.name = 'J'
     this.numStates = 4
   }
 
@@ -36,11 +36,11 @@ export default class LPiece extends Piece {
     const positions = this.getCopiedAnchor()
 
     positions[0].decreaseX()
-    positions[0].decreaseY()
 
-    positions[1].decreaseX()
+    positions[1].increaseX()
 
     positions[2].increaseX()
+    positions[2].decreaseY()
 
     return positions
   }
@@ -49,11 +49,11 @@ export default class LPiece extends Piece {
     const positions = this.getCopiedAnchor()
 
     positions[0].decreaseX()
-    positions[0].increaseY()
+    positions[0].decreaseY()
 
-    positions[1].increaseY()
+    positions[1].decreaseY()
 
-    positions[2].decreaseY()
+    positions[2].increaseY()
 
     return positions
   }
@@ -62,11 +62,11 @@ export default class LPiece extends Piece {
     const positions = this.getCopiedAnchor()
 
     positions[0].decreaseX()
+    positions[0].increaseY()
 
-    positions[1].increaseX()
+    positions[1].decreaseX()
 
     positions[2].increaseX()
-    positions[2].increaseY()
 
     return positions
   }
@@ -74,12 +74,12 @@ export default class LPiece extends Piece {
   private getPosition3(): PiecePositions {
     const positions = this.getCopiedAnchor()
 
-    positions[0].increaseY()
+    positions[0].decreaseY()
 
-    positions[1].decreaseY()
+    positions[1].increaseY()
 
     positions[2].increaseX()
-    positions[2].decreaseY()
+    positions[2].increaseY()
 
     return positions
   }

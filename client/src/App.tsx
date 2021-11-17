@@ -7,7 +7,7 @@ const App: React.FC = () => {
     <div className="flex justify-center items-center h-screen">
       <div className="flex-col space-y-3">
         <ReactP5Wrapper sketch={sketch} />
-        <Button id="test">Test</Button>
+        {/* <Button id="test">Test</Button> */}
       </div>
     </div>
   )

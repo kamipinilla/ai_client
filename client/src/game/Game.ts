@@ -7,6 +7,8 @@ import OPiece from './pieces/set/OPiece'
 import SPiece from './pieces/set/SPiece'
 import TPiece from './pieces/set/TPiece'
 import ZPiece from './pieces/set/ZPiece'
+import { PiecePositions } from './pieces/types'
+import Position from './Position'
 
 function getRandomPiece(): Piece {
   const anchor = Board.getStartPosition()
@@ -32,6 +34,10 @@ export default class Game {
     this.piece = null
   }
 
+  public isGameOver(): boolean {
+    return this.piece !== null && this.board.createsCollition(this.piece.getPositions())
+  }
+
   public spawnRandomPiece(): void {
     this.piece = getRandomPiece()
   }
@@ -43,6 +49,7 @@ export default class Game {
   }
 
   public drop(): void {
+    if (this.isGameOver()) throw Error()
     if (this.piece === null) throw Error()
     if (!this.canDrop()) throw Error()
 
@@ -50,6 +57,8 @@ export default class Game {
   }
 
   public merge(): void {
+    if (this.isGameOver()) throw Error()
+
     if (this.piece === null) throw Error()
 
     if (this.board.canDrop(this.piece)) {
@@ -65,8 +74,56 @@ export default class Game {
   }
 
   public burnLines(): void {
+    if (this.isGameOver()) throw Error()
     if (!this.hasLinesToBurn()) throw Error()
 
     this.board.burnLines()
+  }
+
+  public isPositionFilled(x: number, y: number): boolean {
+    const position = new Position(x, y)
+    return this.board.isPositionFilled(position)
+  }
+
+  public getWidth(): number {
+    return Board.width
+  }
+
+  public getHeight(): number {
+    return Board.height
+  }
+
+  public hasPiece(): boolean {
+    return this.piece !== null
+  }
+
+  public getPiecePositions(): PiecePositions {
+    if (!this.piece) throw Error()
+
+    return this.piece.getPositions()
+  }
+
+  public shiftPieceLeft(): void {
+    if (this.piece === null) throw Error()
+
+    this.piece.shiftLeft()
+  }
+
+  public shiftPieceRight(): void {
+    if (this.piece === null) throw Error()
+
+    this.piece.shiftRight()
+  }
+
+  public rotatePieceRight(): void {
+    if (this.piece === null) throw Error()
+
+    this.piece.rotateRight()
+  }
+
+  public rotatePieceLeft(): void {
+    if (this.piece === null) throw Error()
+    
+    this.piece.rotateLeft()
   }
 }

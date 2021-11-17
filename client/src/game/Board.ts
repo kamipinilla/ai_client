@@ -1,9 +1,10 @@
 import Piece from './pieces/Piece'
+import { PiecePositions } from './pieces/types'
 import Position from './Position'
 
 export default class Board {
-  private static readonly width: number = 10
-  private static readonly height: number = 20
+  public static readonly width: number = 10
+  public static readonly height: number = 20
 
   private board: boolean[][]
 
@@ -20,18 +21,26 @@ export default class Board {
       }
       this.board.push(newCol)
     }
+
+    // for (let i = 0; i < Board.width; i++) {
+    //   this.board[i][0] = true
+    // }
+
+    // for (let i = 0; i < 4; i++) {
+    //   this.board[i][Board.height - 7] = true
+    // }
   }
 
-  public canDrop(piece: Piece): boolean {
-    const positions = piece.getPositions()
-    const positionsCopy = positions.slice()
-
-    for (const position of positionsCopy) {
-      position.decreaseY()
-    }
-
-    for (const position of positionsCopy) {
-      if (this.board[position.getX()][position.getY()]) {
+  private isWithinBounds(piecePositions: PiecePositions): boolean {
+    for (const position of piecePositions) {
+      const x = position.getX()
+      const y = position.getY()
+  
+      if (x < 0 || x >= Board.width) {
+        return false
+      }
+  
+      if (y < 0 || y >= Board.height) {
         return false
       }
     }
@@ -39,10 +48,33 @@ export default class Board {
     return true
   }
 
-  public merge(piece: Piece): void {
-    if (this.canDrop(piece)) {
-      throw Error()
+  public createsCollition(piecePositions: PiecePositions): boolean {
+    for (const position of piecePositions) {
+      if (this.board[position.getX()][position.getY()]) {
+        return true
+      }
     }
+
+    return false
+  }
+
+  public canDrop(piece: Piece): boolean {
+    const positions = piece.getPositions()
+    const positionsCopy = positions.slice() as PiecePositions
+
+    for (const position of positionsCopy) {
+      position.decreaseY()
+    }
+
+    if (!this.isWithinBounds(positionsCopy) || this.createsCollition(positionsCopy)) {
+      return false
+    }
+
+    return true
+  }
+
+  public merge(piece: Piece): void {
+    if (this.canDrop(piece)) throw Error()
 
     const positions = piece.getPositions()
     for (const position of positions) {
@@ -96,8 +128,12 @@ export default class Board {
     }
   }
 
+  public isPositionFilled(position: Position): boolean {
+    return this.board[position.getX()][position.getY()]
+  }
+
   public static getStartPosition(): Position {
-    const rowsFromTheTop = 2
+    const rowsFromTheTop = 0
     return new Position(5, Board.height - 1 - rowsFromTheTop)
   }
 }
