@@ -93,14 +93,21 @@ export default class Board {
   }
 
   public hasLinesToBurn(): boolean {
+    return this.countLinesToBurn() !== 0
+  }
+
+  public countLinesToBurn(): number {
+    let count = 0
+
     for (let j = 0; j < Board.height; j++) {
       if (this.lineIsFull(j)) {
-        return true
+        count++
       }
     }
 
-    return false
+    return count
   }
+
 
   private burnLine(yPos: number): void {
     for (let j = yPos; j < Board.height - 1; j++) {
@@ -126,6 +133,36 @@ export default class Board {
         j++
       }
     }
+  }
+
+  public canMoveLeft(piece: Piece): boolean {
+    const positions = piece.getPositions()
+    const positionsCopy = positions.slice() as PiecePositions
+
+    for (const position of positionsCopy) {
+      position.decreaseX()
+    }
+
+    if (!this.isWithinBounds(positionsCopy) || this.createsCollition(positionsCopy)) {
+      return false
+    }
+
+    return true
+  }
+
+  public canMoveRight(piece: Piece): boolean {
+    const positions = piece.getPositions()
+    const positionsCopy = positions.slice() as PiecePositions
+
+    for (const position of positionsCopy) {
+      position.increaseX()
+    }
+
+    if (!this.isWithinBounds(positionsCopy) || this.createsCollition(positionsCopy)) {
+      return false
+    }
+
+    return true
   }
 
   public isPositionFilled(position: Position): boolean {

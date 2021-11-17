@@ -11,14 +11,40 @@ enum ActionKey {
   Start = 'u',
 }
 
+function getLevelFrom18(lines: number): number {
+  const transition = 20
+  if (lines < transition) return 18
+  else return 18 + Math.floor((lines - transition + 10) / 10)
+}
+
+function getLevelFrom19(lines: number): number {
+  const transition = 140
+  if (lines < transition) return 19
+  else return 19 + Math.floor((lines - transition + 10) / 10)
+}
+
+function getDropCount(level: number): number {
+  if (level >= 29) return 1
+  if (level >= 19) return 2
+  if (level >= 16) return 3
+  if (level >= 13) return 4
+  if (level >= 10) return 5
+  if (level === 9) return 6
+
+  return 60
+}
+
 export default function sketch(t: p5): void {
-  const size = 30
+  const startLevel: number = 15
+  let score: number = 0
+  let isPaused: boolean
+  let tetrisLines: number = 0
 
   let game: Game
-  let isPaused: boolean
+  const size = 30
 
   t.setup = () => {
-    t.createCanvas(size * 10 + 200, size * 20)
+    t.createCanvas(size * 10 + 225, size * 20)
 
     game = new Game()
     isPaused = false
@@ -34,11 +60,15 @@ export default function sketch(t: p5): void {
   t.keyTyped = () => {
     switch (t.key) {
       case ActionKey.Left: {
-        game.shiftPieceLeft()
+        if (game.pieceCanMoveLeft()) {
+          game.shiftPieceLeft()
+        }
         break
       }
       case ActionKey.Right: {
-        game.shiftPieceRight()
+        if (game.pieceCanMoveRight()) {
+          game.shiftPieceRight()
+        }
         break
       }
       case ActionKey.RotateRight: {
@@ -55,15 +85,51 @@ export default function sketch(t: p5): void {
     }
   }
 
+  function getLevel() {
+    if (startLevel === 18) {
+      return getLevelFrom18(game.getLines())
+    }
+    if (startLevel === 19) {
+      return getLevelFrom19(game.getLines())
+    }
+    
+    return startLevel
+  }
+
+  function addScoreOfLinesToBurn(): void {
+    const level = getLevel()
+    switch (game.countLinesToBurn()) {
+      case 1: {
+        score += 40 * (level + 1)
+        break
+      }
+      case 2: {
+        score += 100 * (level + 1)
+        break
+      }
+      case 3: {
+        score += 300 * (level + 1)
+        break
+      }
+      case 4: {
+        score += 1200 * (level + 1)
+        tetrisLines += 4
+        break
+      }
+      default: throw Error()
+    }
+  }
+
   function update() {
     if (t.frameCount < 90 || game.isGameOver()) return
 
-    if (t.frameCount % 4 === 0) {
+    if (t.frameCount % getDropCount(getLevel()) === 0) {
       if (game.canDrop()) {
         game.drop()
       } else {
         game.merge()
         if (game.hasLinesToBurn()) {
+          addScoreOfLinesToBurn()
           game.burnLines()
         }
         game.updateCurrentPiece()
@@ -117,13 +183,45 @@ export default function sketch(t: p5): void {
 
     const nextPiecePositions = game.getNextPiecePositions()
     const newAnchorX = size * 8
-    const newAnchorY = size * -9
+    const newAnchorY = size * -7
     for (const position of nextPiecePositions) {
       const x = position.getX()
       const y = position.getY()
       t.square(newAnchorX + size * x, newAnchorY + size * y, size)
     }
+  }
 
+  function show(text: string, x: number, y: number): void
+  {
+    t.push()
+    t.translate(x, y)
+    t.scale(1, -1)
+    t.text(text, 0, 0);
+    t.pop()
+  }
+
+  function displayLines() {
+    t.textSize(60)
+    show(game.getLines().toString(), 370, 30)
+  }
+
+  function displayLevel() {
+    t.textSize(60)
+    show(getLevel().toString(), 370, 110)
+  }
+
+  function displayScore() {
+    t.textSize(50)
+    show(score.toString(), 310, 500)
+  }
+
+  function displayTetrisRate() {
+    const lines = game.getLines()
+    if (lines === 0) return
+
+    t.textSize(50)
+    const rate = Math.floor((tetrisLines * 100) / lines)
+    show(rate.toString() + "%", 360, 200)
   }
 
   function display() {
@@ -132,5 +230,9 @@ export default function sketch(t: p5): void {
     displayBoard()
     displayPiece()
     displayNextPiece()
+    displayLines()
+    displayLevel()
+    displayScore()
+    displayTetrisRate()
   }
 }

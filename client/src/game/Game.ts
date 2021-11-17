@@ -31,10 +31,12 @@ export default class Game {
   private nextPiece: Piece
   private gameOver: boolean
 
+  private lines: number
   constructor() {
     this.board = new Board()
     
     this.gameOver = false
+    this.lines = 0
     this.nextPiece = getRandomPiece()
     this.updateCurrentPiece()
   }
@@ -91,7 +93,12 @@ export default class Game {
     if (this.isGameOver()) throw Error()
     if (!this.hasLinesToBurn()) throw Error()
 
+    this.lines += this.board.countLinesToBurn()
     this.board.burnLines()
+  }
+
+  public countLinesToBurn() {
+    return this.board.countLinesToBurn()
   }
 
   public isPositionFilled(x: number, y: number): boolean {
@@ -105,6 +112,18 @@ export default class Game {
 
   public getHeight(): number {
     return Board.height
+  }
+
+  public getLines(): number {
+    return this.lines
+  }
+
+  public pieceCanMoveLeft(): boolean {
+    return this.board.canMoveLeft(this.piece)
+  }
+
+  public pieceCanMoveRight(): boolean {
+    return this.board.canMoveRight(this.piece)
   }
 
   public getPiecePositions(): PiecePositions {
