@@ -46,7 +46,7 @@ function getTapSpeedStr(tapId: number) {
 
 export default function sketch(t: p5): void {
   const startLevel: number = 19
-  const tapId: number = 6
+  const tapId: number = 5
   const withNextBox: boolean = true
 
   let score: number = 0
