@@ -36,8 +36,19 @@ function getDropCount(level: number): number {
   return 60
 }
 
+function getTapSpeedStr(tapId: number) {
+  let str = 'X'
+  for (let i = 0; i < tapId - 1; i++) {
+    str += '.'
+  }
+  return str
+}
+
 export default function sketch(t: p5): void {
-  const startLevel: number = 18
+  const startLevel: number = 19
+  const tapId: number = 6
+  const withNextBox: boolean = true
+
   let score: number = 0
   let isPaused: boolean
   let tetrisLines: number = 0
@@ -144,15 +155,14 @@ export default function sketch(t: p5): void {
 
   async function updatePlacement() {
     const input: StackRabbitInput = {
-      withNextBox: false,
-
+      withNextBox,
       board: game.getBoard(),
       currentPiece: game.getPiece(),
       nextPiece: game.getNextPiece(),
       level: getLevel(),
       lines: game.getLines(),
       reactionTime: 99,
-      tapSpeed: 'X....',
+      tapSpeed: getTapSpeedStr(tapId),
     }
     outcomes = await getOutcomes(input)
     processOutcomes()
