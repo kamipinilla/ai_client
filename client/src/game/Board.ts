@@ -40,7 +40,7 @@ export default class Board {
         return false
       }
   
-      if (y < 0 || y >= Board.height) {
+      if (y < 0 || y >= Board.height + 2) {
         return false
       }
     }
@@ -48,7 +48,7 @@ export default class Board {
     return true
   }
 
-  public createsCollition(piecePositions: PiecePositions): boolean {
+  public createsCollision(piecePositions: PiecePositions): boolean {
     for (const position of piecePositions) {
       if (this.board[position.getX()][position.getY()]) {
         return true
@@ -66,8 +66,18 @@ export default class Board {
       position.decreaseY()
     }
 
-    if (!this.isWithinBounds(positionsCopy) || this.createsCollition(positionsCopy)) {
+    if (!this.isWithinBounds(positionsCopy)) {
       return false
+    }
+
+    if (this.createsCollision(positionsCopy)) {
+      if (!piece.getCanPierce()) {
+        return false
+      } else {
+        if (piece.getPierceFinished()) {
+          return false
+        }
+      }
     }
 
     return true
@@ -143,7 +153,7 @@ export default class Board {
       position.decreaseX()
     }
 
-    if (!this.isWithinBounds(positionsCopy) || this.createsCollition(positionsCopy)) {
+    if (!this.isWithinBounds(positionsCopy) || this.createsCollision(positionsCopy)) {
       return false
     }
 
@@ -158,7 +168,7 @@ export default class Board {
       position.increaseX()
     }
 
-    if (!this.isWithinBounds(positionsCopy) || this.createsCollition(positionsCopy)) {
+    if (!this.isWithinBounds(positionsCopy) || this.createsCollision(positionsCopy)) {
       return false
     }
 
@@ -170,7 +180,6 @@ export default class Board {
   }
 
   public static getStartPosition(): Position {
-    const rowsFromTheTop = 0
-    return new Position(5, Board.height - 1 - rowsFromTheTop)
+    return new Position(5, Board.height - 1)
   }
 }

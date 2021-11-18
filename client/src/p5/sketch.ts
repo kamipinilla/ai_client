@@ -1,5 +1,7 @@
 import { P5Instance as p5 } from 'react-p5-wrapper'
+import { getOutcomes } from '../api/stackRabbit'
 import Game from '../game/Game'
+import { Outcome, StackRabbitInput } from '../types'
 
 enum ActionKey {
   Left = 'n',
@@ -12,7 +14,7 @@ enum ActionKey {
 }
 
 function getLevelFrom18(lines: number): number {
-  const transition = 20
+  const transition = 130
   if (lines < transition) return 18
   else return 18 + Math.floor((lines - transition + 10) / 10)
 }
@@ -35,10 +37,11 @@ function getDropCount(level: number): number {
 }
 
 export default function sketch(t: p5): void {
-  const startLevel: number = 15
+  const startLevel: number = 18
   let score: number = 0
   let isPaused: boolean
   let tetrisLines: number = 0
+  let outcomes: Outcome[]
 
   let game: Game
   const size = 30
@@ -47,6 +50,7 @@ export default function sketch(t: p5): void {
     t.createCanvas(size * 10 + 225, size * 20)
 
     game = new Game()
+    updatePlacement()
     isPaused = false
   }
 
@@ -133,7 +137,45 @@ export default function sketch(t: p5): void {
           game.burnLines()
         }
         game.updateCurrentPiece()
+        updatePlacement()
       }
+    }
+  }
+
+  async function updatePlacement() {
+    const input: StackRabbitInput = {
+      withNextBox: false,
+
+      board: game.getBoard(),
+      currentPiece: game.getPiece(),
+      nextPiece: game.getNextPiece(),
+      level: getLevel(),
+      lines: game.getLines(),
+      reactionTime: 99,
+      tapSpeed: 'X....',
+    }
+    outcomes = await getOutcomes(input)
+    processOutcomes()
+  }
+
+  function processOutcomes() {
+    const bestOutcome = outcomes[0]
+    if (bestOutcome.isSpecialMove) {
+      game.getPiece().setCanPierce()
+    }
+    const { numShifts, numRightRot } = bestOutcome
+
+    const absNumShifts = Math.abs(numShifts)
+    for (let i = 0; i < absNumShifts; i++) {
+      if (numShifts > 0) {
+        game.shiftPieceRight()
+      } if (numShifts < 0) {
+        game.shiftPieceLeft()
+      }
+    }
+
+    for (let i = 0; i < numRightRot; i++) {
+      game.rotatePieceRight()
     }
   }
 
@@ -154,7 +196,17 @@ export default function sketch(t: p5): void {
   function displayBlock(x: number, y: number, isPiece: boolean) {
     t.strokeWeight(2)
     t.stroke(0)
-    t.fill(isPiece ? 255 : 0, isPiece ? 255 : 0, 255)
+    t.fill(isPiece ? 255 : 0, isPiece ? 255 : game.getPiece().getCanPierce() ? 0 : 255, 255)
+
+    if (isPiece) {
+      if (game.getPiece().getCanPierce()) {
+        t.fill(255, 255, 0)
+      } else {
+        t.fill(0, 255, 255)
+      }
+    } else {
+      t.fill(0, 0, 255)
+    }
 
     t.square(size * x, size * y, size)
   }
@@ -191,8 +243,7 @@ export default function sketch(t: p5): void {
     }
   }
 
-  function show(text: string, x: number, y: number): void
-  {
+  function show(text: string, x: number, y: number): void {
     t.push()
     t.translate(x, y)
     t.scale(1, -1)
