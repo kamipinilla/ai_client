@@ -46,7 +46,7 @@ function getTapSpeedStr(tapId: number) {
 
 export default function sketch(t: p5): void {
   const startLevel: number = 19
-  const tapId: number = 5
+  const tapId: number = 6
   const withNextBox: boolean = true
 
   let score: number = 0
@@ -161,7 +161,7 @@ export default function sketch(t: p5): void {
       nextPiece: game.getNextPiece(),
       level: getLevel(),
       lines: game.getLines(),
-      reactionTime: 99,
+      reactionTime: 0,
       tapSpeed: getTapSpeedStr(tapId),
     }
     outcomes = await getOutcomes(input)
