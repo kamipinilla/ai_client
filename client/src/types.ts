@@ -14,8 +14,22 @@ export interface StackRabbitInput {
 }
 
 export interface Outcome {
-  numShifts: number
-  numRightRot: number
+  inputSequence: string
   score: number
-  isSpecialMove: boolean
+}
+
+export type FrameChar = '.' | 'A' | 'B' | 'L' | 'R' | 'E' | 'F' | 'I' | 'G'
+
+export enum Rotation {
+  Right = 'Right',
+  Left = 'Left',
+}
+
+export enum Shift {
+  Right = 'Right',
+  Left = 'Left',
+}
+export interface FrameInput {
+  rotation: Rotation | null
+  shift: Shift | null
 }

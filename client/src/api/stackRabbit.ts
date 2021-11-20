@@ -53,19 +53,12 @@ function parseStackRabbitResponse(response: string): Outcome[] {
   return outcomeStrArray.map((outcomeStr): Outcome => {
 
     const outcomeArray = outcomeStr.split('|')
-    
-    const placement = outcomeArray[0].split(',')
-    const numRightRot = parseInt(placement[0])
-    const numShifts = parseInt(placement[1])
-
+    const inputSequence = outcomeArray[1]
     const score = parseFloat(outcomeArray[outcomeArray.length - 2])
-    const isSpecialMove = outcomeArray[outcomeArray.length - 1] === 'true'
 
     return {
-      numShifts,
-      numRightRot,
+      inputSequence,
       score,
-      isSpecialMove,
     }
   })
 }
