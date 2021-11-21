@@ -7,7 +7,7 @@ export enum ActionKey {
   RotateRight = 'd',
   RotateLeft = 's',
 
-  Start = 'u',
+  Start = '.',
 }
 
 function getLevelFrom18(lines: number): number {
@@ -42,14 +42,6 @@ export function getDropCount(level: number): number {
   if (level === 9) return 6
 
   return 60
-}
-
-export function getTapSpeedStr(tapId: number) {
-  let str = 'X'
-  for (let i = 0; i < tapId - 1; i++) {
-    str += '.'
-  }
-  return str
 }
 
 export function getFrameInput(frameChar: FrameChar): FrameInput {

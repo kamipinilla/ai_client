@@ -1,19 +1,22 @@
 import { P5Instance as p5 } from 'react-p5-wrapper'
 import { getOutcomes } from '../api/stackRabbit'
 import Game from '../game/Game'
-import { FrameChar, Outcome, Rotation, Shift, StackRabbitInput } from '../types'
-import { ActionKey, getDropCount, getFrameInput, getLevel, getTapSpeedStr } from './utils'
+import { FrameChar, InitialOutcome, Rotation, Shift, StackRabbitInput } from '../types'
+import { ActionKey, getDropCount, getFrameInput, getLevel } from './utils'
 
 export default function sketch(t: p5): void {
   const startLevel: number = 19
   const tapId: number = 6
-  const withNextBox: boolean = true
+  const reactionTime: number = 15
 
   let score: number = 0
   let isPaused: boolean = false
   let tetrisLines: number = 0
-  let outcomes: Outcome[]
-  let inputSequence: string | null = null
+  let notPredicted = false
+  let outcomes: InitialOutcome[]
+
+  let initialInputSequence: string
+  let currentInputSequece: string
 
   let isWaitingOutcome = true
   let game: Game = new Game()
@@ -22,7 +25,23 @@ export default function sketch(t: p5): void {
   t.setup = () => {
     t.createCanvas(size * 10 + 225, size * 20)
 
-    fetchOutcomesSafe()
+    fetchInitialPlacement()
+  }
+
+  async function fetchInitialPlacement() {
+    const input: StackRabbitInput = {
+      board: game.getBoard(),
+      currentPiece: game.getPiece(),
+      nextPiece: game.getNextPiece(),
+      level: getLevel(startLevel, game.getLines()),
+      lines: game.getLines(),
+      reactionTime,
+      tapId,
+    }
+    outcomes = await getOutcomes(input)
+    const bestOutcome = outcomes[0]
+    initialInputSequence = bestOutcome.inputSequence
+    processOutcomes()
   }
 
   t.draw = () => {
@@ -87,7 +106,7 @@ export default function sketch(t: p5): void {
   function update() {
     if (t.frameCount < 90 || isWaitingOutcome || game.isGameOver()) return
 
-    processInput()
+    processPlayer()
     updateGame()
   }
 
@@ -113,14 +132,14 @@ export default function sketch(t: p5): void {
     fetchOutcomes()
   }
 
-  function processInput() {
-    if (inputSequence === null) {
-      throw Error('No input sequence')
-    }
+  function getNextFrameChar(): FrameChar {
+      const frameChar = currentInputSequece[0] as FrameChar
+      currentInputSequece = currentInputSequece.slice(1)
+      return frameChar
+  }
 
-    const frameChar = inputSequence[0] as FrameChar
-    inputSequence = inputSequence.slice(1)
-
+  function processPlayer() {
+    const frameChar = getNextFrameChar()
     const input = getFrameInput(frameChar)
 
     const { rotation, shift } = input
@@ -143,25 +162,49 @@ export default function sketch(t: p5): void {
 
   async function fetchOutcomes() {
     const input: StackRabbitInput = {
-      withNextBox,
       board: game.getBoard(),
       currentPiece: game.getPiece(),
       nextPiece: game.getNextPiece(),
       level: getLevel(startLevel, game.getLines()),
       lines: game.getLines(),
-      reactionTime: 0,
-      tapSpeed: getTapSpeedStr(tapId),
+      reactionTime,
+      tapId,
     }
     outcomes = await getOutcomes(input)
     processOutcomes()
   }
 
   function processOutcomes() {
-    const bestOutcome = outcomes[0]
+    const currentOutcome = outcomes.find(outcome => {
+      return outcome.inputSequence === initialInputSequence
+    })
 
-    inputSequence = bestOutcome.inputSequence
-    console.log(game.getPiece().getName())
-    console.log(inputSequence)
+    if (currentOutcome === undefined) {
+      notPredicted = true
+
+      currentInputSequece = initialInputSequence
+
+      const bestOutcome = outcomes[0]
+      initialInputSequence = bestOutcome.inputSequence
+    } else {
+      const adjustments = currentOutcome.adjustments
+      if (adjustments.length === 0) {
+        throw Error('Adjustments list empty')
+      }
+      const bestAdjustment = adjustments[0]
+      const adjustmentInputSequence = bestAdjustment.inputSequence
+  
+      currentInputSequece = initialInputSequence.slice(0, reactionTime) + adjustmentInputSequence
+  
+      const followUp = bestAdjustment.followUp
+      if (followUp === null) {
+        throw Error('No follow up')
+      }
+  
+      const followUpInputSequece = followUp.inputSequence
+      initialInputSequence = followUpInputSequece
+    }
+
     isWaitingOutcome = false
   }
 
@@ -174,8 +217,13 @@ export default function sketch(t: p5): void {
     t.background(0)
 
     t.fill(0)
-    t.strokeWeight(2)
-    t.stroke(255)
+    if (notPredicted) {
+      t.strokeWeight(10)
+      t.stroke(255, 0, 0)
+    } else {
+      t.strokeWeight(2)
+      t.stroke(255)
+    }
     t.rect(0, 0, size * 10, size * 20)
   }
 

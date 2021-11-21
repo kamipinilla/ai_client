@@ -1,6 +1,6 @@
 import Board from '../game/Board'
 import Position from '../game/Position'
-import { Outcome, StackRabbitInput } from '../types'
+import { InitialOutcome, StackRabbitInput } from '../types'
 import path from 'path'
 import { get } from './rest'
 
@@ -14,16 +14,24 @@ function getEncodedBoard(board: Board): string {
   return boardStr
 }
 
-export async function getOutcomes(input: StackRabbitInput): Promise<Outcome[]> {
+function getTapSpeedStr(tapId: number) {
+  let str = 'X'
+  for (let i = 0; i < tapId - 1; i++) {
+    str += '.'
+  }
+  return str
+}
+
+export async function getOutcomes(input: StackRabbitInput): Promise<InitialOutcome[]> {
   const host = 'http://localhost:8000'
-  const entryName = input.withNextBox ? 'sync-nb-all' : 'sync-nnb-all'
+  const entryName = 'engine-new'
   const encodedBoard = getEncodedBoard(input.board)
   const currentPiece = input.currentPiece.getName()
   const nextPiece = input.nextPiece ? input.nextPiece.getName() : 'null'
   const level = input.level.toString()
   const lines = input.lines.toString()
   const reactionTime = input.reactionTime.toString()
-  const tapSpeed = input.tapSpeed
+  const tapSpeed = getTapSpeedStr(input.tapId)
 
   const requestUrl = host + '/' + path.join(
     entryName,
@@ -48,17 +56,6 @@ export async function getOutcomes(input: StackRabbitInput): Promise<Outcome[]> {
   }
 }
 
-function parseStackRabbitResponse(response: string): Outcome[] {
-  const outcomeStrArray = response.split(';')
-  return outcomeStrArray.map((outcomeStr): Outcome => {
-
-    const outcomeArray = outcomeStr.split('|')
-    const inputSequence = outcomeArray[1]
-    const score = parseFloat(outcomeArray[outcomeArray.length - 2])
-
-    return {
-      inputSequence,
-      score,
-    }
-  })
+function parseStackRabbitResponse(response: string): InitialOutcome[] {
+  return JSON.parse(response) as InitialOutcome[]
 }
