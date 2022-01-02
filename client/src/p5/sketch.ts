@@ -1,47 +1,68 @@
 import { P5Instance as p5 } from 'react-p5-wrapper'
 import { getOutcomes } from '../api/stackRabbit'
 import Game from '../game/Game'
-import { FrameChar, InitialOutcome, Rotation, Shift, StackRabbitInput } from '../types'
-import { ActionKey, getDropCount, getFrameInput, getLevel } from './utils'
+import { Outcome, StackRabbitInput } from '../types'
+
+enum ActionKey {
+  Left = 'n',
+  Right = 'm',
+
+  RotateRight = 'd',
+  RotateLeft = 's',
+
+  Start = 'u',
+}
+
+function getLevelFrom18(lines: number): number {
+  const transition = 130
+  if (lines < transition) return 18
+  else return 18 + Math.floor((lines - transition + 10) / 10)
+}
+
+function getLevelFrom19(lines: number): number {
+  const transition = 140
+  if (lines < transition) return 19
+  else return 19 + Math.floor((lines - transition + 10) / 10)
+}
+
+function getDropCount(level: number): number {
+  if (level >= 29) return 1
+  if (level >= 19) return 2
+  if (level >= 16) return 3
+  if (level >= 13) return 4
+  if (level >= 10) return 5
+  if (level === 9) return 6
+
+  return 60
+}
+
+function getTapSpeedStr(tapId: number) {
+  let str = 'X'
+  for (let i = 0; i < tapId - 1; i++) {
+    str += '.'
+  }
+  return str
+}
 
 export default function sketch(t: p5): void {
   const startLevel: number = 19
   const tapId: number = 6
-  const reactionTime: number = 15
+  const withNextBox: boolean = true
 
   let score: number = 0
-  let isPaused: boolean = false
+  let isPaused: boolean
   let tetrisLines: number = 0
-  let notPredicted = false
-  let outcomes: InitialOutcome[]
+  let outcomes: Outcome[]
 
-  let initialInputSequence: string
-  let currentInputSequece: string
-
-  let isWaitingOutcome = true
-  let game: Game = new Game()
+  let game: Game
   const size = 30
 
   t.setup = () => {
     t.createCanvas(size * 10 + 225, size * 20)
 
-    fetchInitialPlacement()
-  }
-
-  async function fetchInitialPlacement() {
-    const input: StackRabbitInput = {
-      board: game.getBoard(),
-      currentPiece: game.getPiece(),
-      nextPiece: game.getNextPiece(),
-      level: getLevel(startLevel, game.getLines()),
-      lines: game.getLines(),
-      reactionTime,
-      tapId,
-    }
-    outcomes = await getOutcomes(input)
-    const bestOutcome = outcomes[0]
-    initialInputSequence = bestOutcome.inputSequence
-    processOutcomes()
+    game = new Game()
+    updatePlacement()
+    isPaused = false
   }
 
   t.draw = () => {
@@ -79,8 +100,19 @@ export default function sketch(t: p5): void {
     }
   }
 
+  function getLevel() {
+    if (startLevel === 18) {
+      return getLevelFrom18(game.getLines())
+    }
+    if (startLevel === 19) {
+      return getLevelFrom19(game.getLines())
+    }
+    
+    return startLevel
+  }
+
   function addScoreOfLinesToBurn(): void {
-    const level = getLevel(startLevel, game.getLines())
+    const level = getLevel()
     switch (game.countLinesToBurn()) {
       case 1: {
         score += 40 * (level + 1)
@@ -104,14 +136,9 @@ export default function sketch(t: p5): void {
   }
 
   function update() {
-    if (t.frameCount < 90 || isWaitingOutcome || game.isGameOver()) return
+    if (t.frameCount < 90 || game.isGameOver()) return
 
-    processPlayer()
-    updateGame()
-  }
-
-  function updateGame() {
-    if (t.frameCount % getDropCount(getLevel(startLevel, game.getLines())) === 0) {
+    if (t.frameCount % getDropCount(getLevel()) === 0) {
       if (game.canDrop()) {
         game.drop()
       } else {
@@ -121,91 +148,45 @@ export default function sketch(t: p5): void {
           game.burnLines()
         }
         game.updateCurrentPiece()
-        fetchOutcomesSafe()
+        updatePlacement()
       }
     }
   }
 
-  function fetchOutcomesSafe() {
-    isWaitingOutcome = true
-
-    fetchOutcomes()
-  }
-
-  function getNextFrameChar(): FrameChar {
-      const frameChar = currentInputSequece[0] as FrameChar
-      currentInputSequece = currentInputSequece.slice(1)
-      return frameChar
-  }
-
-  function processPlayer() {
-    const frameChar = getNextFrameChar()
-    const input = getFrameInput(frameChar)
-
-    const { rotation, shift } = input
-    if (rotation !== null) {
-      if (rotation === Rotation.Right) {
-        game.getPiece().rotateRight()
-      } else if (rotation === Rotation.Left) {
-        game.getPiece().rotateLeft()
-      }
-    }
-
-    if (shift !== null) {
-      if (shift === Shift.Right) {
-        game.getPiece().shiftRight()
-      } else if (shift === Shift.Left) {
-        game.getPiece().shiftLeft()
-      }
-    }
-  }
-
-  async function fetchOutcomes() {
+  async function updatePlacement() {
     const input: StackRabbitInput = {
+      withNextBox,
       board: game.getBoard(),
       currentPiece: game.getPiece(),
       nextPiece: game.getNextPiece(),
-      level: getLevel(startLevel, game.getLines()),
+      level: getLevel(),
       lines: game.getLines(),
-      reactionTime,
-      tapId,
+      reactionTime: 0,
+      tapSpeed: getTapSpeedStr(tapId),
     }
     outcomes = await getOutcomes(input)
     processOutcomes()
   }
 
   function processOutcomes() {
-    const currentOutcome = outcomes.find(outcome => {
-      return outcome.inputSequence === initialInputSequence
-    })
+    const bestOutcome = outcomes[0]
+    if (bestOutcome.isSpecialMove) {
+      game.getPiece().setCanPierce()
+    }
+    const { numShifts, numRightRot } = bestOutcome
 
-    if (currentOutcome === undefined) {
-      notPredicted = true
-
-      currentInputSequece = initialInputSequence
-
-      const bestOutcome = outcomes[0]
-      initialInputSequence = bestOutcome.inputSequence
-    } else {
-      const adjustments = currentOutcome.adjustments
-      if (adjustments.length === 0) {
-        throw Error('Adjustments list empty')
+    const absNumShifts = Math.abs(numShifts)
+    for (let i = 0; i < absNumShifts; i++) {
+      if (numShifts > 0) {
+        game.shiftPieceRight()
+      } if (numShifts < 0) {
+        game.shiftPieceLeft()
       }
-      const bestAdjustment = adjustments[0]
-      const adjustmentInputSequence = bestAdjustment.inputSequence
-  
-      currentInputSequece = initialInputSequence.slice(0, reactionTime) + adjustmentInputSequence
-  
-      const followUp = bestAdjustment.followUp
-      if (followUp === null) {
-        throw Error('No follow up')
-      }
-  
-      const followUpInputSequece = followUp.inputSequence
-      initialInputSequence = followUpInputSequece
     }
 
-    isWaitingOutcome = false
+    for (let i = 0; i < numRightRot; i++) {
+      game.rotatePieceRight()
+    }
   }
 
   function flipVertically() {
@@ -217,23 +198,22 @@ export default function sketch(t: p5): void {
     t.background(0)
 
     t.fill(0)
-    if (notPredicted) {
-      t.strokeWeight(10)
-      t.stroke(255, 0, 0)
-    } else {
-      t.strokeWeight(2)
-      t.stroke(255)
-    }
+    t.strokeWeight(2)
+    t.stroke(255)
     t.rect(0, 0, size * 10, size * 20)
   }
 
   function displayBlock(x: number, y: number, isPiece: boolean) {
     t.strokeWeight(2)
     t.stroke(0)
-    t.fill(isPiece ? 255 : 0, isPiece ? 255 : 255, 255)
+    t.fill(isPiece ? 255 : 0, isPiece ? 255 : game.getPiece().getCanPierce() ? 0 : 255, 255)
 
     if (isPiece) {
-      t.fill(0, 255, 255)
+      if (game.getPiece().getCanPierce()) {
+        t.fill(255, 255, 0)
+      } else {
+        t.fill(0, 255, 255)
+      }
     } else {
       t.fill(0, 0, 255)
     }
@@ -288,7 +268,7 @@ export default function sketch(t: p5): void {
 
   function displayLevel() {
     t.textSize(60)
-    show(getLevel(startLevel, game.getLines()).toString(), 370, 110)
+    show(getLevel().toString(), 370, 110)
   }
 
   function displayScore() {

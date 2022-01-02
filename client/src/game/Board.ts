@@ -66,8 +66,18 @@ export default class Board {
       position.decreaseY()
     }
 
-    if (!this.isWithinBounds(positionsCopy) || this.createsCollision(positionsCopy)) {
+    if (!this.isWithinBounds(positionsCopy)) {
       return false
+    }
+
+    if (this.createsCollision(positionsCopy)) {
+      if (!piece.getCanPierce()) {
+        return false
+      } else {
+        if (piece.getPierceFinished()) {
+          return false
+        }
+      }
     }
 
     return true

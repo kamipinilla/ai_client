@@ -1,6 +1,6 @@
 import Board from '../game/Board'
 import Position from '../game/Position'
-import { InitialOutcome, StackRabbitInput } from '../types'
+import { Outcome, StackRabbitInput } from '../types'
 import path from 'path'
 import { get } from './rest'
 
@@ -14,24 +14,16 @@ function getEncodedBoard(board: Board): string {
   return boardStr
 }
 
-function getTapSpeedStr(tapId: number) {
-  let str = 'X'
-  for (let i = 0; i < tapId - 1; i++) {
-    str += '.'
-  }
-  return str
-}
-
-export async function getOutcomes(input: StackRabbitInput): Promise<InitialOutcome[]> {
+export async function getOutcomes(input: StackRabbitInput): Promise<Outcome[]> {
   const host = 'http://localhost:8000'
-  const entryName = 'engine-new'
+  const entryName = input.withNextBox ? 'sync-nb-all' : 'sync-nnb-all'
   const encodedBoard = getEncodedBoard(input.board)
   const currentPiece = input.currentPiece.getName()
   const nextPiece = input.nextPiece ? input.nextPiece.getName() : 'null'
   const level = input.level.toString()
   const lines = input.lines.toString()
   const reactionTime = input.reactionTime.toString()
-  const tapSpeed = getTapSpeedStr(input.tapId)
+  const tapSpeed = input.tapSpeed
 
   const requestUrl = host + '/' + path.join(
     entryName,
@@ -56,6 +48,24 @@ export async function getOutcomes(input: StackRabbitInput): Promise<InitialOutco
   }
 }
 
-function parseStackRabbitResponse(response: string): InitialOutcome[] {
-  return JSON.parse(response) as InitialOutcome[]
+function parseStackRabbitResponse(response: string): Outcome[] {
+  const outcomeStrArray = response.split(';')
+  return outcomeStrArray.map((outcomeStr): Outcome => {
+
+    const outcomeArray = outcomeStr.split('|')
+    
+    const placement = outcomeArray[0].split(',')
+    const numRightRot = parseInt(placement[0])
+    const numShifts = parseInt(placement[1])
+
+    const score = parseFloat(outcomeArray[outcomeArray.length - 2])
+    const isSpecialMove = outcomeArray[outcomeArray.length - 1] === 'true'
+
+    return {
+      numShifts,
+      numRightRot,
+      score,
+      isSpecialMove,
+    }
+  })
 }

@@ -9,12 +9,44 @@ export default abstract class Piece {
   protected anchor: Position
   protected state: State
   
+  private canPierce: boolean
+  private pierceStarted: boolean
+  private pierceFinished: boolean
+  
   protected readonly abstract numStates: NumStates
   protected readonly abstract name: PieceName
   
   constructor(anchor: Position) {
     this.anchor = anchor
     this.state = 0
+    
+    this.canPierce = false
+    this.pierceStarted = false
+    this.pierceFinished = false
+  }
+
+  public setCanPierce(): void {
+    this.canPierce = true
+  }
+
+  public getCanPierce(): boolean {
+    return this.canPierce
+  }
+
+  public setPierceStarted(): void {
+    this.pierceStarted = true
+  }
+
+  public setPierceFinished(): void {
+    this.pierceFinished = true
+  }
+
+  public getPierceStarted(): boolean {
+    return this.pierceStarted
+  }
+
+  public getPierceFinished(): boolean {
+    return this.pierceFinished
   }
 
   public shiftRight(): void {
