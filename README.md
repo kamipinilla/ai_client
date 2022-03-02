@@ -1,5 +1,3 @@
-# stack_rabbit_client
-
 ## How to run
 
 ### Server
