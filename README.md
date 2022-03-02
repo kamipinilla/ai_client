@@ -1,9 +1,7 @@
-## How to run
-
-### Server
+# Server
 Download the server [here](https://github.com/kamipinilla/StackRabbit) and run it.
 
-### Client
+# Client
 
 ```bash
 cd client
