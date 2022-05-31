@@ -13,7 +13,7 @@ enum ActionKey {
 }
 
 export default function sketch(t: p5): void {
-  const startLevel = 12
+  const startLevel = 0
   const uiSize = 30
 
   let score: number
@@ -54,11 +54,15 @@ export default function sketch(t: p5): void {
         break
       }
       case ActionKey.RotateRight: {
-        game.rotatePieceRight()
+        if (game.pieceCanRotateRight()) {
+          game.rotatePieceRight()
+        }
         break
       }
       case ActionKey.RotateLeft: {
-        game.rotatePieceLeft()
+        if (game.pieceCanRotateLeft()) {
+          game.rotatePieceLeft()
+        }
         break
       }
       case ActionKey.Start: {

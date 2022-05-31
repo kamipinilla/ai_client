@@ -132,34 +132,42 @@ export default class Board {
     }
   }
 
-  public canMoveLeft(piece: Piece): boolean {
+  private isPiecePositionValid(piece: Piece): boolean {
     const positions = piece.getPositions()
-    const positionsCopy = positions.slice() as PiecePositions
+    const isValid = this.isWithinBounds(positions) && !this.createsCollision(positions)
+    return isValid
+  }
 
-    for (const position of positionsCopy) {
-      position.decreaseX()
-    }
+  public canMoveLeft(piece: Piece): boolean {
+    piece.shiftLeft()
+    const isValid = this.isPiecePositionValid(piece)
+    piece.shiftRight()
 
-    if (!this.isWithinBounds(positionsCopy) || this.createsCollision(positionsCopy)) {
-      return false
-    }
-
-    return true
+    return isValid
   }
 
   public canMoveRight(piece: Piece): boolean {
-    const positions = piece.getPositions()
-    const positionsCopy = positions.slice() as PiecePositions
+    piece.shiftRight()
+    const isValid = this.isPiecePositionValid(piece)
+    piece.shiftLeft()
 
-    for (const position of positionsCopy) {
-      position.increaseX()
-    }
+    return isValid
+  }
 
-    if (!this.isWithinBounds(positionsCopy) || this.createsCollision(positionsCopy)) {
-      return false
-    }
+  public canRotateLeft(piece: Piece): boolean {
+    piece.rotateLeft()
+    const isValid = this.isPiecePositionValid(piece)
+    piece.rotateRight()
 
-    return true
+    return isValid
+  }
+
+  public canRotateRight(piece: Piece): boolean {
+    piece.rotateRight()
+    const isValid = this.isPiecePositionValid(piece)
+    piece.rotateLeft()
+
+    return isValid
   }
 
   public isPositionFilled(position: Position): boolean {

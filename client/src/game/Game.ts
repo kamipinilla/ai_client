@@ -138,6 +138,14 @@ export default class Game {
     return this.board.canMoveRight(this.piece)
   }
 
+  public pieceCanRotateLeft(): boolean {
+    return this.board.canRotateLeft(this.piece)
+  }
+
+  public pieceCanRotateRight(): boolean {
+    return this.board.canRotateRight(this.piece)
+  }
+
   public getPiecePositions(): PiecePositions {
     return this.piece.getPositions()
   }
