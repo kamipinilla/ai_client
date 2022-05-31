@@ -9,46 +9,14 @@ export default abstract class Piece {
   protected anchor: Position
   protected state: State
   
-  private canPierce: boolean
-  private pierceStarted: boolean
-  private pierceFinished: boolean
-  
   protected readonly abstract numStates: NumStates
   protected readonly abstract name: PieceName
   
   constructor(anchor: Position) {
     this.anchor = anchor
     this.state = 0
-    
-    this.canPierce = false
-    this.pierceStarted = false
-    this.pierceFinished = false
   }
-
-  public setCanPierce(): void {
-    this.canPierce = true
-  }
-
-  public getCanPierce(): boolean {
-    return this.canPierce
-  }
-
-  public setPierceStarted(): void {
-    this.pierceStarted = true
-  }
-
-  public setPierceFinished(): void {
-    this.pierceFinished = true
-  }
-
-  public getPierceStarted(): boolean {
-    return this.pierceStarted
-  }
-
-  public getPierceFinished(): boolean {
-    return this.pierceFinished
-  }
-
+  
   public shiftRight(): void {
     this.anchor.increaseX()
   }
@@ -73,11 +41,45 @@ export default abstract class Piece {
     return this.name
   }
 
-  public equals(other: Piece): boolean {
+  public isSameKind(other: Piece): boolean {
     return this.name === other.name
   }
 
-  public abstract getPositions(): PiecePositions
+  public getPositions(): PiecePositions {
+    switch (this.state) {
+      case 0: {
+        return this.getPosition0()
+      }
+      case 1: {
+        return this.getPosition1()
+      }
+      case 2: {
+        return this.getPosition2()
+      }
+      case 3: {
+        return this.getPosition3()
+      }
+      default: {
+        throw Error(`Invalid state: ${this.state}`)
+      }
+    }
+  }
+
+  protected getPosition0(): PiecePositions {
+    throw Error(`Not implemented`)
+  }
+
+  protected getPosition1(): PiecePositions {
+    throw Error(`Not implemented`)
+  }
+
+  protected getPosition2(): PiecePositions {
+    throw Error(`Not implemented`)
+  }
+
+  protected getPosition3(): PiecePositions {
+    throw Error(`Not implemented`)
+  }
 
   protected getCopiedAnchor(): PiecePositions {
     return [

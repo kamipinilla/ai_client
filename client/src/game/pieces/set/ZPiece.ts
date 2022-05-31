@@ -13,21 +13,7 @@ export default class ZPiece extends Piece {
     this.numStates = 2
   }
 
-  public getPositions(): PiecePositions {
-    switch (this.state) {
-      case 0: {
-        return this.getPosition0()
-      }
-      case 1: {
-        return this.getPosition1()
-      }
-      default: {
-        throw Error()
-      }
-    }
-  }
-
-  private getPosition0(): PiecePositions {
+  protected override getPosition0(): PiecePositions {
     const positions = this.getCopiedAnchor()
 
     positions[0].decreaseX()
@@ -40,7 +26,7 @@ export default class ZPiece extends Piece {
     return positions
   }
 
-  private getPosition1(): PiecePositions {
+  protected override getPosition1(): PiecePositions {
     const positions = this.getCopiedAnchor()
 
     positions[0].decreaseY()

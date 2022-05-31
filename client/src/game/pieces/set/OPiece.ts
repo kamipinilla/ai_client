@@ -13,18 +13,7 @@ export default class OPiece extends Piece {
     this.numStates = 1
   }
 
-  public getPositions(): PiecePositions {
-    switch (this.state) {
-      case 0: {
-        return this.getPosition0()
-      }
-      default: {
-        throw Error()
-      }
-    }
-  }
-
-  private getPosition0(): PiecePositions {
+  protected override getPosition0(): PiecePositions {
     const positions = this.getCopiedAnchor()
 
     positions[0].decreaseX()

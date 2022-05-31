@@ -13,27 +13,7 @@ export default class TPiece extends Piece {
     this.numStates = 4
   }
 
-  public getPositions(): PiecePositions {
-    switch (this.state) {
-      case 0: {
-        return this.getPosition0()
-      }
-      case 1: {
-        return this.getPosition1()
-      }
-      case 2: {
-        return this.getPosition2()
-      }
-      case 3: {
-        return this.getPosition3()
-      }
-      default: {
-        throw Error()
-      }
-    }
-  }
-
-  private getPosition0(): PiecePositions {
+  protected override getPosition0(): PiecePositions {
     const positions = this.getCopiedAnchor()
 
     positions[0].decreaseX()
@@ -43,7 +23,7 @@ export default class TPiece extends Piece {
     return positions
   }
 
-  private getPosition1(): PiecePositions {
+  protected override getPosition1(): PiecePositions {
     const positions = this.getCopiedAnchor()
 
     positions[0].increaseY()
@@ -53,7 +33,7 @@ export default class TPiece extends Piece {
     return positions
   }
 
-  private getPosition2(): PiecePositions {
+  protected override getPosition2(): PiecePositions {
     const positions = this.getCopiedAnchor()
 
     positions[0].increaseX()
@@ -63,7 +43,7 @@ export default class TPiece extends Piece {
     return positions
   }
 
-  private getPosition3(): PiecePositions {
+  protected override getPosition3(): PiecePositions {
     const positions = this.getCopiedAnchor()
 
     positions[0].decreaseY()

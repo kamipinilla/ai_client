@@ -60,7 +60,7 @@ export default class Game {
 
   private setupNextPiece(): void {
     let nextPiece = getRandomPiece()
-    if (this.piece.equals(nextPiece)) {
+    if (this.piece.isSameKind(nextPiece)) {
       nextPiece = getRandomPiece()
     }
 
@@ -76,17 +76,6 @@ export default class Game {
     if (!this.canDrop()) throw Error()
 
     this.piece.drop()
-    if (this.piece.getCanPierce()) {
-      if (this.board.createsCollision(this.piece.getPositions())) {
-        if (!this.piece.getPierceStarted()) {
-          this.piece.setPierceStarted()
-        }
-      } else {
-        if (this.piece.getPierceStarted() && !this.piece.getPierceFinished()) {
-          this.piece.setPierceFinished()
-        }
-      }
-    }
   }
 
   public merge(): void {

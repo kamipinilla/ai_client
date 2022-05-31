@@ -21,14 +21,6 @@ export default class Board {
       }
       this.board.push(newCol)
     }
-
-    // for (let i = 0; i < Board.width; i++) {
-    //   this.board[i][0] = true
-    // }
-
-    // for (let i = 0; i < 4; i++) {
-    //   this.board[i][Board.height - 7] = true
-    // }
   }
 
   private isWithinBounds(piecePositions: PiecePositions): boolean {
@@ -71,20 +63,14 @@ export default class Board {
     }
 
     if (this.createsCollision(positionsCopy)) {
-      if (!piece.getCanPierce()) {
-        return false
-      } else {
-        if (piece.getPierceFinished()) {
-          return false
-        }
-      }
+      return false
     }
 
     return true
   }
 
   public merge(piece: Piece): void {
-    if (this.canDrop(piece)) throw Error()
+    if (this.canDrop(piece)) throw Error(`Can't merge floating piece`)
 
     const positions = piece.getPositions()
     for (const position of positions) {
