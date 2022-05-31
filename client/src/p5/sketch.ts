@@ -2,18 +2,68 @@ import { P5Instance as p5 } from 'react-p5-wrapper'
 import Game from '../game/Game'
 import { range } from '../utils'
 
-enum ActionKey {
-  Left = 'n',
-  Right = 'm',
+class Key {
+  private static values = new Array<Key>()
 
-  RotateRight = 'd',
-  RotateLeft = 's',
+  static readonly N = new this('N', 78)
+  static readonly M = new this('M', 77)
+  static readonly D = new this('D', 68)
+  static readonly S = new this('S', 83)
+  static readonly U = new this('U', 85)
 
-  Start = 'u',
+  private constructor(
+    private name: string,
+    private code: number,
+  ) {
+    Key.values.push(this)
+  }
+
+  public getCode(): number {
+    return this.code
+  }
+
+  public static valueOf(code: number): Key | null {
+    const value = this.values.find(value => value.code === code)
+    return value ?? null
+  }
+
+  public toString(): string {
+    return this.name
+  }
+}
+
+class Action {
+  private static values = new Array<Action>()
+
+  static readonly Left = new this('Left', Key.N)
+  static readonly Right = new this('Right', Key.M)
+  static readonly RotateRight = new this('RotateRight', Key.D)
+  static readonly RotateLeft = new this('RotateLeft', Key.S)
+  static readonly Start = new this('Start', Key.U)
+
+  public getKey(): Key {
+    return this.key
+  }
+
+  private constructor(
+    private name: string,
+    private key: Key,
+  ) {
+    Action.values.push(this)
+  }
+
+  public static valueOf(key: Key): Action | null {
+    const value = this.values.find(value => value.key === key)
+    return value ?? null
+  }
+
+  public toString(): string {
+    return this.name
+  }
 }
 
 export default function sketch(t: p5): void {
-  const startLevel = 0
+  const startLevel = 12
   const uiSize = 30
 
   let score: number
@@ -33,42 +83,11 @@ export default function sketch(t: p5): void {
   }
 
   t.draw = () => {
+    checkKeys()
     if (!isPaused) {
       update()
     }
     display()
-  }
-
-  t.keyTyped = () => {
-    switch (t.key) {
-      case ActionKey.Left: {
-        if (game.pieceCanMoveLeft()) {
-          game.shiftPieceLeft()
-        }
-        break
-      }
-      case ActionKey.Right: {
-        if (game.pieceCanMoveRight()) {
-          game.shiftPieceRight()
-        }
-        break
-      }
-      case ActionKey.RotateRight: {
-        if (game.pieceCanRotateRight()) {
-          game.rotatePieceRight()
-        }
-        break
-      }
-      case ActionKey.RotateLeft: {
-        if (game.pieceCanRotateLeft()) {
-          game.rotatePieceLeft()
-        }
-        break
-      }
-      case ActionKey.Start: {
-        isPaused = !isPaused
-      }
-    }
   }
 
   function getDropCount(): number {
@@ -132,6 +151,75 @@ export default function sketch(t: p5): void {
         break
       }
       default: throw Error()
+    }
+  }
+
+  t.keyTyped = () => {
+    if (t.keyCode === Action.Start.getKey().getCode()) {
+      isPaused = !isPaused
+    }
+  }
+
+  let dasCounter = 0
+  let rotateIsPressed = false
+  let isShifting = false
+
+  function processShiftAction(canShift: () => boolean, doShift: () => void): void {
+    if (canShift()) {
+      if (!isShifting) {
+        dasCounter = 0
+        doShift()
+        isShifting = true
+      } else {
+        if (dasCounter === 16) {
+          dasCounter = 10
+          doShift()
+        } else {
+          dasCounter++
+        }
+      }
+    } else {
+      if (!isShifting) {
+        dasCounter = 16
+      } else if (dasCounter !== 16) {
+        dasCounter++
+      }
+    }
+  }
+
+  function checkKeys() {
+    const left = t.keyIsDown(Action.Left.getKey().getCode())
+    const right = t.keyIsDown(Action.Right.getKey().getCode())
+    const rotateLeft = t.keyIsDown(Action.RotateLeft.getKey().getCode())
+    const rotateRight = t.keyIsDown(Action.RotateRight.getKey().getCode())
+
+    if (left !== right) {
+      const canShift = left ? game.pieceCanMoveLeft.bind(game) : game.pieceCanMoveRight.bind(game)
+      const doShift = left ? game.shiftPieceLeft.bind(game) : game.shiftPieceRight.bind(game)
+      
+      processShiftAction(canShift, doShift)
+    }
+
+    if (isShifting && !left && !right) {
+      isShifting = false
+    }
+
+    if (rotateLeft !== rotateRight && !rotateIsPressed) {
+      rotateIsPressed = true
+
+      if (rotateLeft) {
+        if (game.pieceCanRotateLeft()) {
+          game.rotatePieceLeft()
+        }
+      } else {
+        if (game.pieceCanRotateRight()) {
+          game.rotatePieceRight()
+        }
+      }
+    }
+
+    if (rotateIsPressed && !rotateLeft && !rotateRight) {
+      rotateIsPressed = false
     }
   }
 
@@ -239,6 +327,11 @@ export default function sketch(t: p5): void {
     show(rate.toString() + "%", 360, 200)
   }
 
+  function displayDasCounter() {
+    t.textSize(50)
+    show(dasCounter.toString(), 360, 250)
+  }
+
   function display() {
     flipVertically()
     displayBackground()
@@ -249,5 +342,6 @@ export default function sketch(t: p5): void {
     displayLevel()
     displayScore()
     displayTetrisRate()
+    displayDasCounter()
   }
 }
