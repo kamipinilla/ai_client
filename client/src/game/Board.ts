@@ -17,7 +17,7 @@ export default class Board {
     this.board = []
     for (let i = 0; i < Board.width; i++) {
       const newCol = []
-      for (let j = 0; i < Board.height; j++) {
+      for (let j = 0; j < Board.height; j++) {
         newCol.push(false)
       }
       this.board.push(newCol)
