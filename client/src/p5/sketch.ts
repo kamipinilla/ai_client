@@ -1,7 +1,5 @@
 import { P5Instance as p5 } from 'react-p5-wrapper'
-import { getOutcomes } from '../api/stackRabbit'
 import Game from '../game/Game'
-import { Outcome, StackRabbitInput } from '../types'
 
 enum ActionKey {
   Left = 'n',
@@ -13,56 +11,24 @@ enum ActionKey {
   Start = 'u',
 }
 
-function getLevelFrom18(lines: number): number {
-  const transition = 130
-  if (lines < transition) return 18
-  else return 18 + Math.floor((lines - transition + 10) / 10)
-}
-
-function getLevelFrom19(lines: number): number {
-  const transition = 140
-  if (lines < transition) return 19
-  else return 19 + Math.floor((lines - transition + 10) / 10)
-}
-
-function getDropCount(level: number): number {
-  if (level >= 29) return 1
-  if (level >= 19) return 2
-  if (level >= 16) return 3
-  if (level >= 13) return 4
-  if (level >= 10) return 5
-  if (level === 9) return 6
-
-  return 60
-}
-
-function getTapSpeedStr(tapId: number) {
-  let str = 'X'
-  for (let i = 0; i < tapId - 1; i++) {
-    str += '.'
-  }
-  return str
-}
-
 export default function sketch(t: p5): void {
-  const startLevel: number = 19
-  const tapId: number = 6
-  const withNextBox: boolean = true
+  const startLevel = 12
+  const uiSize = 30
 
-  let score: number = 0
+  let score: number
   let isPaused: boolean
-  let tetrisLines: number = 0
-  let outcomes: Outcome[]
+  let tetrisLines: number
 
   let game: Game
-  const size = 30
 
   t.setup = () => {
-    t.createCanvas(size * 10 + 225, size * 20)
+    t.createCanvas(uiSize * 10 + 225, uiSize * 20)
+
+    isPaused = false
+    score = 0
+    tetrisLines = 0
 
     game = new Game()
-    updatePlacement()
-    isPaused = false
   }
 
   t.draw = () => {
@@ -100,15 +66,44 @@ export default function sketch(t: p5): void {
     }
   }
 
-  function getLevel() {
-    if (startLevel === 18) {
-      return getLevelFrom18(game.getLines())
+  function getDropCount(): number {
+    const level = getLevel()
+
+    if (level >= 29) return 1
+    if (level >= 19) return 2
+    if (level >= 16) return 3
+    if (level >= 13) return 4
+    if (level >= 10) return 5
+    if (level === 9) return 6
+    if (level === 8) return 8
+    if (level === 7) return 13
+    if (level === 6) return 18
+    if (level === 5) return 23
+    if (level === 4) return 28
+    if (level === 3) return 33
+    if (level === 2) return 38
+    if (level === 1) return 43
+    if (level === 0) return 48
+  
+    throw Error(`Invalid level: ${level}`)
+  }
+
+  function getTransitionCount(): number {
+    if (startLevel <= 9) {
+      return startLevel * 10 + 10
+    } else if (startLevel >= 26) {
+      return 200
+    } else {
+      return Math.max(100, startLevel * 10 - 50)
     }
-    if (startLevel === 19) {
-      return getLevelFrom19(game.getLines())
-    }
-    
-    return startLevel
+  }
+
+  function getLevel(): number {
+    const transition = getTransitionCount()
+
+    const lines = game.getLines()
+    if (lines < transition) return startLevel
+    else return startLevel + Math.floor((lines - transition + 10) / 10)
   }
 
   function addScoreOfLinesToBurn(): void {
@@ -138,7 +133,7 @@ export default function sketch(t: p5): void {
   function update() {
     if (t.frameCount < 90 || game.isGameOver()) return
 
-    if (t.frameCount % getDropCount(getLevel()) === 0) {
+    if (t.frameCount % getDropCount() === 0) {
       if (game.canDrop()) {
         game.drop()
       } else {
@@ -148,44 +143,7 @@ export default function sketch(t: p5): void {
           game.burnLines()
         }
         game.updateCurrentPiece()
-        updatePlacement()
       }
-    }
-  }
-
-  async function updatePlacement() {
-    const input: StackRabbitInput = {
-      withNextBox,
-      board: game.getBoard(),
-      currentPiece: game.getPiece(),
-      nextPiece: game.getNextPiece(),
-      level: getLevel(),
-      lines: game.getLines(),
-      reactionTime: 0,
-      tapSpeed: getTapSpeedStr(tapId),
-    }
-    outcomes = await getOutcomes(input)
-    processOutcomes()
-  }
-
-  function processOutcomes() {
-    const bestOutcome = outcomes[0]
-    if (bestOutcome.isSpecialMove) {
-      game.getPiece().setCanPierce()
-    }
-    const { numShifts, numRightRot } = bestOutcome
-
-    const absNumShifts = Math.abs(numShifts)
-    for (let i = 0; i < absNumShifts; i++) {
-      if (numShifts > 0) {
-        game.shiftPieceRight()
-      } if (numShifts < 0) {
-        game.shiftPieceLeft()
-      }
-    }
-
-    for (let i = 0; i < numRightRot; i++) {
-      game.rotatePieceRight()
     }
   }
 
@@ -200,7 +158,7 @@ export default function sketch(t: p5): void {
     t.fill(0)
     t.strokeWeight(2)
     t.stroke(255)
-    t.rect(0, 0, size * 10, size * 20)
+    t.rect(0, 0, uiSize * 10, uiSize * 20)
   }
 
   function displayBlock(x: number, y: number, isPiece: boolean) {
@@ -218,7 +176,7 @@ export default function sketch(t: p5): void {
       t.fill(0, 0, 255)
     }
 
-    t.square(size * x, size * y, size)
+    t.square(uiSize * x, uiSize * y, uiSize)
   }
 
   function displayBoard() {
@@ -244,12 +202,12 @@ export default function sketch(t: p5): void {
     t.fill(0, 0, 255)
 
     const nextPiecePositions = game.getNextPiecePositions()
-    const newAnchorX = size * 8
-    const newAnchorY = size * -7
+    const newAnchorX = uiSize * 8
+    const newAnchorY = uiSize * -7
     for (const position of nextPiecePositions) {
       const x = position.getX()
       const y = position.getY()
-      t.square(newAnchorX + size * x, newAnchorY + size * y, size)
+      t.square(newAnchorX + uiSize * x, newAnchorY + uiSize * y, uiSize)
     }
   }
 
