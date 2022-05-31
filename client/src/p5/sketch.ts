@@ -1,5 +1,6 @@
 import { P5Instance as p5 } from 'react-p5-wrapper'
 import Game from '../game/Game'
+import { range } from '../utils'
 
 enum ActionKey {
   Left = 'n',
@@ -180,8 +181,8 @@ export default function sketch(t: p5): void {
   }
 
   function displayBoard() {
-    for (let i = 0; i < game.getWidth(); i++) {
-      for (let j = 0; j < game.getHeight(); j++) {
+    for (const i of range(game.getWidth())) {
+      for (const j of range(game.getHeight())) {
         if (game.isPositionFilled(i, j)) {
           displayBlock(i, j, false)
         }

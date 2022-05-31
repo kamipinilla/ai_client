@@ -3,11 +3,12 @@ import Position from '../game/Position'
 import { Outcome, StackRabbitInput } from '../types'
 import path from 'path'
 import { get } from './rest'
+import { range, reversed } from '../utils'
 
 function getEncodedBoard(board: Board): string {
   let boardStr = ''
-  for (let j = Board.height - 1; j >= 0; j--) {
-    for (let i = 0; i < Board.width; i++) {
+  for (const j of reversed(range(Board.height))) {
+    for (const i of range(Board.width)) {
       boardStr += board.isPositionFilled(new Position(i, j)) ? '1' : '0'
     }
   }

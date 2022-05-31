@@ -1,3 +1,4 @@
+import { range } from '../utils'
 import Piece from './pieces/Piece'
 import { PiecePositions } from './pieces/types'
 import Position from './Position'
@@ -14,9 +15,9 @@ export default class Board {
 
   private initializeBoard(): void {
     this.board = []
-    for (let i = 0; i < Board.width; i++) {
+    for (const i of range(Board.width)) {
       const newCol = []
-      for (let j = 0; j < Board.height; j++) {
+      for (const j of range(Board.height)) {
         newCol.push(false)
       }
       this.board.push(newCol)
@@ -79,7 +80,7 @@ export default class Board {
   }
 
   private lineIsFull(yPos: number): boolean {
-    for (let i = 0; i < Board.width; i++) {
+    for (const i of range(Board.width)) {
       if (!this.board[i][yPos]) {
         return false
       }
@@ -95,7 +96,7 @@ export default class Board {
   public countLinesToBurn(): number {
     let count = 0
 
-    for (let j = 0; j < Board.height; j++) {
+    for (const j of range(Board.height)) {
       if (this.lineIsFull(j)) {
         count++
       }
@@ -106,14 +107,14 @@ export default class Board {
 
 
   private burnLine(yPos: number): void {
-    for (let j = yPos; j < Board.height - 1; j++) {
-      for (let i = 0; i < Board.width; i++) {
+    for (const j of range(yPos, Board.height - 1)) {
+      for (const i of range(Board.width)) {
         this.board[i][j] = this.board[i][j + 1]
       }
     }
 
     const topRow = Board.height - 1
-    for (let i = 0; i < Board.width; i++) {
+    for (const i of range(Board.width)) {
       this.board[i][topRow] = false
     }
   }
