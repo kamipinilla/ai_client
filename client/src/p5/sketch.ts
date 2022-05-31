@@ -165,17 +165,8 @@ export default function sketch(t: p5): void {
   function displayBlock(x: number, y: number, isPiece: boolean) {
     t.strokeWeight(2)
     t.stroke(0)
-    t.fill(isPiece ? 255 : 0, isPiece ? 255 : game.getPiece().getCanPierce() ? 0 : 255, 255)
-
-    if (isPiece) {
-      if (game.getPiece().getCanPierce()) {
-        t.fill(255, 255, 0)
-      } else {
-        t.fill(0, 255, 255)
-      }
-    } else {
-      t.fill(0, 0, 255)
-    }
+    const fillParams: [number, number, number] = isPiece ? [0, 255, 255] : [0, 0, 255]
+    t.fill(...fillParams)
 
     t.square(uiSize * x, uiSize * y, uiSize)
   }
